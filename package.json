@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@types/puppeteer": "^7.0.4",
+    "axios": "^1.6.7",
+    "puppeteer": "^22.0.0",
+    "sqlite3": "^5.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
