@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "@types/axios": "^0.14.0",
     "@types/puppeteer": "^7.0.4",
+    "@types/sqlite3": "^3.1.11",
+    "@types/typescript": "^2.0.0",
     "axios": "^1.6.7",
     "puppeteer": "^22.0.0",
     "sqlite3": "^5.1.7",
