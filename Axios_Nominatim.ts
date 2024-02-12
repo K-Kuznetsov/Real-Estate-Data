@@ -6,7 +6,7 @@ interface NominatimResponse {
     };
 };
 
-async function NominatimAPI(lat: number, lon: number): Promise<string> {
+async function NominatimAPI(lat: string, lon: string): Promise<string> {
     try {
         const response = await axios.get<NominatimResponse>(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
         const Area = response.data.address.suburb;

@@ -4,8 +4,8 @@ import { APIKey, WorkAddress } from './PrivateData.json';
 const TravelMode = 'walking'; // Other options are driving, bicycling, transit.
 
 interface GoogleDirectionsResponse {
-    lat: number;
-    lon: number;
+    lat: string;
+    lon: string;
     FromWork: string;
 };
 

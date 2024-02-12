@@ -5,25 +5,25 @@ import SqliteInsert from './Sqlite_Insert';
 import { GetResultCount, GetItemsPerPage } from './Puppeteer_SearchResults';
 
 interface BaseInfoType {
-    Address: string ;
-    Price: string;
-    Website: string | 'city24.ee';
+    Address: string | null;
+    Price: string | null;
+    Website: string | null;
 };
 
 interface ExtraInfoType {
-    Rooms: number;
-    Size: number;
-    Year: number;
-    Condition: string;
-    EnergyClass: string;
-    Technical: string;
-    Floors: number;
-    Floor: number;
-    HVAC: string;
-    Kitchen: string;
-    Bathroom: string;
-    BuildingType: string;
-    Other: string;
+    Rooms: string | null;
+    Size: string | null;
+    Year: string | null;
+    Condition: string | null;
+    EnergyClass: string | null;
+    Technical: string | null;
+    Floors: string | null;
+    Floor: string | null;
+    HVAC: string | null;
+    Kitchen: string | null;
+    Bathroom: string | null;
+    BuildingType: string | null;
+    Other: string | null;
 };
 
 async function City24(TableName: string, PriceLimit: string, DealType: string): Promise<void> {
@@ -79,31 +79,41 @@ async function City24(TableName: string, PriceLimit: string, DealType: string): 
 
         for (let i = 0; i < ItemsPerPage; i++) {
             console.log('Page' + PageNumber + ' ' + (i + 1) + '/' + ItemsPerPage + ' out of ' + ResultsFound);
+            try {
+                const info = await GetInfo(i, page, AddressDiv);
+                if (info) {
 
-            const { BaseInfo, ExtraInfo, lat, lon, FromWork, Area } = await GetInfo(i, page, AddressDiv).catch(console.error) as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; lat: number; lon: number; FromWork: string; Area: string; };
-            SqliteInsert({
-                Table: TableName,
-                Area,
-                Address: BaseInfo.Address,
-                Rooms: ExtraInfo.Rooms,
-                Size: ExtraInfo.Size,
-                Price: BaseInfo.Price,
-                FromWork: parseFloat(FromWork) ?? null,
-                Website: BaseInfo.Website,
-                Latitude: lat,
-                Longitude: lon,
-                Year: ExtraInfo.Year,
-                Condition: ExtraInfo.Condition,
-                EnergyClass: ExtraInfo.EnergyClass,
-                Technical: ExtraInfo.Technical,
-                Floors: ExtraInfo.Floors,
-                Floor: ExtraInfo.Floor,
-                HVAC: ExtraInfo.HVAC,
-                Kitchen: ExtraInfo.Kitchen,
-                Bathroom: ExtraInfo.Bathroom,
-                BuildingType: ExtraInfo.BuildingType,
-                Other: ExtraInfo.Other
-            });
+                    const { BaseInfo, ExtraInfo, lat, lon, FromWork, Area } = await GetInfo(i, page, AddressDiv).catch(console.error) as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; lat: string; lon: string; FromWork: string; Area: string; };
+                    SqliteInsert({
+                        Table: TableName,
+                        Area,
+                        Address: BaseInfo.Address ?? '',
+                        Rooms: ExtraInfo.Rooms ?? '',
+                        Size: ExtraInfo.Size ?? '',
+                        Price: BaseInfo.Price ?? '',
+                        FromWork: FromWork ?? null,
+                        Website: BaseInfo.Website ?? '',
+                        Latitude: lat ?? null,
+                        Longitude: lon ?? null,
+                        Year: ExtraInfo.Year ?? '',
+                        Condition: ExtraInfo.Condition ?? '',
+                        EnergyClass: ExtraInfo.EnergyClass ?? '',
+                        Technical: ExtraInfo.Technical ?? '',
+                        Floors: ExtraInfo.Floors ?? '',
+                        Floor: ExtraInfo.Floor ?? '',
+                        HVAC: ExtraInfo.HVAC ?? '',
+                        Kitchen: ExtraInfo.Kitchen ?? '',
+                        Bathroom: ExtraInfo.Bathroom ?? '',
+                        BuildingType: ExtraInfo.BuildingType ?? '',
+                        Other: ExtraInfo.Other ?? ''
+                    });
+
+                } else {
+                    console.error("Failed to get information for item " + i);
+                }
+            } catch (error) {
+                console.error("Error in processing item " + i + ": ", error);
+            };
 
             await page.goto(ResultsPage);
             await new Promise(resolve => setTimeout(resolve, 5000));
@@ -113,7 +123,7 @@ async function City24(TableName: string, PriceLimit: string, DealType: string): 
     console.log("City24 finished");
 };
 
-async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Promise<{ BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; lat: number; lon: number; FromWork: string; Area: string }> {
+async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Promise<{ BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; lat: string; lon: string; FromWork: string; Area: string }> {
 
     const BaseInfo: BaseInfoType = await page.evaluate((i, AddressDiv) => {
         const WebsiteElement = document.querySelectorAll('.object--result .object__info .object__header .object__attributes')[i] as HTMLAnchorElement;
@@ -121,98 +131,108 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
         let data: any = {};
         data.Address = document.querySelectorAll(AddressDiv)[i].textContent?.split(',')[0].split('/')[0].replace(/-\d+$/, '').trim() ?? null;
         data.Price = document.querySelectorAll('.object--result .object__info .object__header .object__specs .object-price .object-price__main-price')[i].textContent?.replace(/\D/g, '') ?? null;
-        data.Website = WebsiteElement?.href ?? 'city24.ee';
+        data.Website = WebsiteElement?.href ?? null;
         return data;
     }, i, AddressDiv);
 
-    await page.goto(BaseInfo.Website);
-    await page.waitForSelector('.full-specs tbody tr');
+    if (BaseInfo.Website) {
+        await page.goto(BaseInfo.Website);
+        await page.waitForSelector('.full-specs tbody tr');
+        console.log('Table found');
 
-    const ExtraInfo: ExtraInfoType = await page.evaluate(() => {
-        let data: any = {};
-        const rows = document.querySelectorAll('.full-specs tbody tr');
 
-        rows.forEach((row) => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length === 2) {
-                const key = cells[0].textContent?.trim();
-                const tdText = cells[1].textContent?.trim();
-                let value = '';
-                const divs = cells[1].querySelectorAll('div');
-                if (divs.length > 0) {
-                    value = Array.from(divs).map(div => div.textContent?.trim()).join(', ');
+        const ExtraInfo: ExtraInfoType = await page.evaluate(() => {
+            let data: any = {};
+            const rows = document.querySelectorAll('.full-specs tbody tr');
+
+            rows.forEach((row) => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 2) {
+                    const key = cells[0].textContent?.trim();
+                    const tdText = cells[1].textContent?.trim();
+                    let value = '';
+                    const divs = cells[1].querySelectorAll('div');
+                    if (divs.length > 0) {
+                        value = Array.from(divs).map(div => div.textContent?.trim()).join(', ');
+                    };
+                    value = value.replace(tdText + ', ', '');
+
+                    if (key?.match('Seisukord')) {
+                        data.Condition = value ? value : '';
+                    } else if (key?.match('Energiamärgis')) {
+                        data.EnergyClass = value ? value : '';
+                    } else if (key?.match('Korruseid kokku')) {
+                        data.Floors = value ? parseInt(value.trim()) : '';
+                    } else if (key?.match('Korrus')) {
+                        data.Floor = value ? parseInt(value.trim()) : '';
+                    } else if (key?.match('Küte') || key?.match('Ventilatsioon')) {
+                        data.HVAC = value ? value : '';
+                    } else if (key?.match('Pliit')) {
+                        data.Kitchen = value ? value : '';
+                    } else if (key?.match('Ehitusaasta')) {
+                        data.Year = value ? parseInt(value.trim()) : '';
+                    } else if (key?.match('Sanitaar')) {
+                        data.Bathroom = value ? value : '';
+                    } else if (key?.match('Materjal')) {
+                        data.BuildingType = value ? value : '';
+                    } else if (key?.match('Tube')) {
+                        data.Rooms = value ? parseInt(value.trim()) : '';
+                    } else if (key?.match('Üldpind')) {
+                        data.Size = value ? parseInt(value.split(' ')[0].trim()) : '';
+                    } else if (key?.match('Side') || key?.match('Turvasüsteem')) {
+                        data.Technical = value ? value : '';
+                    } else if (key?.match('Lisaruumid') || key?.match('Eelised') || key?.match('Parkimine') || key?.match('Lisaväärtused') || key?.match('Lift')) {
+                        data.Other = value ? value : '';
+                    };
                 };
-                value = value.replace(tdText + ', ', '');
-
-                if (key?.match('Seisukord')) {
-                    data.Condition = value ? value : null;
-                } else if (key?.match('Energiamärgis')) {
-                    data.EnergyClass = value ? value : null;
-                } else if (key?.match('Korruseid kokku')) {
-                    data.Floors = value ? parseInt(value.trim()) : null;
-                } else if (key?.match('Korrus')) {
-                    data.Floor = value ? parseInt(value.trim()) : null;
-                } else if (key?.match('Küte') || key?.match('Ventilatsioon')) {
-                    data.HVAC = value ? value : null;
-                } else if (key?.match('Pliit')) {
-                    data.Kitchen = value ? value : null;
-                } else if (key?.match('Ehitusaasta')) {
-                    data.Year = value ? parseInt(value.trim()) : null;
-                } else if (key?.match('Sanitaar')) {
-                    data.Bathroom = value ? value : null;
-                } else if (key?.match('Materjal')) {
-                    data.BuildingType = value ? value : null;
-                } else if (key?.match('Tube')) {
-                    data.Rooms = value ? parseInt(value.trim()) : null;
-                } else if (key?.match('Üldpind')) {
-                    data.Size = value ? parseInt(value.split(' ')[0].trim()) : null;
-                } else if (key?.match('Side') || key?.match('Turvasüsteem')) {
-                    data.Technical = value ? value : null;
-                } else if (key?.match('Lisaruumid') || key?.match('Eelised') || key?.match('Parkimine') || key?.match('Lisaväärtused') || key?.match('Lift')) {
-                    data.Other = value ? value : null;
-                };
-            };
+            });
+            return data;
         });
-        return data;
-    });
 
-    const GoogleMapsAddress = BaseInfo.Address ? BaseInfo.Address.replace('(otse omanikult)', '').replace(/[ÕÖÜÄ]/g, match => {
-        const map: { [key: string]: string } = { 'Õ': 'O', 'Ö': 'O', 'Ü': 'U', 'Ä': 'A' };
-        return map[match];
-    }).replace(/[õöüä]/g, match => {
-        const map: { [key: string]: string } = { 'õ': 'o', 'ö': 'o', 'ü': 'u', 'ä': 'a' };
-        return map[match];
-    }).trim() + ', Tallinn' : null;
+        const GoogleMapsAddress = BaseInfo.Address ? BaseInfo.Address.replace('(otse omanikult)', '').replace(/[ÕÖÜÄ]/g, match => {
+            const map: { [key: string]: string } = { 'Õ': 'O', 'Ö': 'O', 'Ü': 'U', 'Ä': 'A' };
+            return map[match];
+        }).replace(/[õöüä]/g, match => {
+            const map: { [key: string]: string } = { 'õ': 'o', 'ö': 'o', 'ü': 'u', 'ä': 'a' };
+            return map[match];
+        }).trim() + ', Tallinn' : null;
 
-    let lat: number | null = null;
-    try {
-        lat = await GoogleDirectionsAPI(GoogleMapsAddress ?? '').then(response => response.lat);
-    } catch (error) {
-        console.error(error);
+        let lat: string | null = null;
+        try {
+            lat = await GoogleDirectionsAPI(GoogleMapsAddress ?? '').then(response => response.lat);
+        } catch (error) {
+            console.error(error);
+        };
+
+        let lon: string | null = null;
+        try {
+            lon = await GoogleDirectionsAPI(GoogleMapsAddress ?? '').then(response => response.lon);
+        } catch (error) {
+            console.error(error);
+        };
+
+        let FromWork: string | null = null;
+        try {
+            FromWork = await GoogleDirectionsAPI(GoogleMapsAddress ?? '').then(response => response.FromWork);
+        } catch (error) {
+            console.error(error);
+        };
+
+        let Area: string | null = null;
+        try {
+            Area = await NominatimAPI(lat ?? '', lon ?? '').then(response => response);
+        } catch (error) {
+            console.error(error);
+        };
+
+        return { BaseInfo, ExtraInfo, lat: lat ?? '', lon: lon ?? '', FromWork: FromWork ?? '', Area: Area ?? '' };
+
+    } else {
+        console.error('Website is null');
+        return null as unknown as {
+            BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; lat: string; lon: string; FromWork: string; Area: string
+        };
     };
-
-    let lon: number | null = null;
-    try {
-        lon = await GoogleDirectionsAPI(GoogleMapsAddress ?? '').then(response => response.lon);
-    } catch (error) {
-        console.error(error);
-    };
-
-    let FromWork: string | null = null;
-    try {
-        FromWork = await GoogleDirectionsAPI(GoogleMapsAddress ?? '').then(response => response.FromWork);
-    } catch (error) {
-        console.error(error);
-    };
-
-    let Area: string | null = null;
-    try {
-        Area = await NominatimAPI(lat ?? 0, lon ?? 0).then(response => response);
-    } catch (error) {
-        console.error(error);
-    };
-
-    return { BaseInfo, ExtraInfo, lat: lat ?? 0, lon: lon ?? 0, FromWork: FromWork ?? '0', Area: Area ?? '' };
 };
 
 export default City24;
