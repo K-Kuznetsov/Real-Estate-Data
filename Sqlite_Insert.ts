@@ -3,27 +3,27 @@ import sqlite3 from 'sqlite3';
 const db = new sqlite3.Database('./Kinnisvara.db');
 
 interface SqliteInsertParams {
-    Table: string;
-    Area: string;
-    Address: string;
-    Rooms: string;
-    Size: string;
-    Price: string;
-    FromWork: string;
-    Website: string;
-    Latitude: string;
-    Longitude: string;
-    Year: string;
-    Condition: string;
-    EnergyClass: string;
-    Technical: string;
-    Floors: string;
-    Floor: string;
-    HVAC: string;
-    Kitchen: string;
-    Bathroom: string;
-    BuildingType: string;
-    Other: string;
+    Table: string | null;
+    Area: string | null;
+    Address: string | null;
+    Rooms: string | null;
+    Size: string | null;
+    Price: string | null;
+    FromWork: string | null;
+    Website: string | null;
+    Latitude: string | null;
+    Longitude: string | null;
+    Year: string | null;
+    Condition: string | null;
+    EnergyClass: string | null;
+    Technical: string | null;
+    Floors: string | null;
+    Floor: string | null;
+    HVAC: string | null;
+    Kitchen: string | null;
+    Bathroom: string | null;
+    BuildingType: string | null;
+    Other: string | null;
 };
 
 function SqliteInsert({
