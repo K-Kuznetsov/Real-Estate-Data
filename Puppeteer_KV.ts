@@ -109,11 +109,24 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
     const BaseInfo: BaseInfoType = await page.evaluate((i, AddressDiv) => {
         const data: any = {};
         data.Address = document.querySelectorAll(AddressDiv)[i].textContent?.split(",")[2]?.split('/')[0]?.replace(/-\d+$/, '')?.trim() || null;
-        data.Price = document.querySelectorAll('.price')[i+1].textContent?.split('  ')[0].replace(' €', '').replace(' ', '').replace(/\D/g, '').trim() || null;
+    
+        let priceElement = document.querySelectorAll('.price')[0];
+        data.Price = priceElement?.textContent?.split('  ')[0].replace(' €', '').replace(' ', '').replace(/\D/g, '').trim() || null;
+    
+        if (data.Price === null || data.Price === undefined || data.Price === '') {
+            priceElement = document.querySelectorAll('.price')[i + 1];
+            data.Price = priceElement?.textContent?.split('  ')[0].replace(' €', '').replace(' ', '').replace(/\D/g, '').trim() || null;
+        } else {
+            priceElement = document.querySelectorAll('.price')[i];
+            data.Price = priceElement?.textContent?.split('  ')[0].replace(' €', '').replace(' ', '').replace(/\D/g, '').trim() || null;
+        };
+    
         const websiteElement = document.querySelectorAll('.description h2 a:not(.object-promoted)')[i] as HTMLAnchorElement;
         data.Website = websiteElement?.href ?? null;
+    
         return data;
     }, i, AddressDiv);
+    
 
     if (BaseInfo.Website) {
         await page.goto(BaseInfo.Website);
