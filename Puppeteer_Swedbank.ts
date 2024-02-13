@@ -13,7 +13,7 @@ async function Swedbank(NetSalary: string): Promise<string> {
     let LoanAmount: string | null = null;
     try {
         LoanAmount = await page.evaluate(() => {
-            return document.querySelector('#max-amount')?.textContent?.replace(' ', '') ?? null;
+            return document.querySelector('#max-amount')?.textContent?.replace(/\D/g, '') ?? null;
         });
     } catch (error) {
         console.error(error);
