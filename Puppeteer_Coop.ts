@@ -23,7 +23,7 @@ async function Coop(NetSalary: string): Promise<string> {
 
         if (filteredElements.length > 0) {
             const parallelElement = filteredElements[0].nextElementSibling;
-            return parallelElement ? parallelElement.textContent?.replace(/\s/g, '') : null;
+            return parallelElement ? parallelElement.textContent?.replace(/\D/g, '') : null;
         };
         return null;
     }) as string | null;
