@@ -19,7 +19,7 @@ async function Luminor(NetSalary: string): Promise<string> {
     let LoanAmount: string | null = null;
     try {
         LoanAmount = await page.evaluate(() => {
-            return document.querySelector('.component-money')?.textContent?.replace(' ', '') ?? null;
+            return document.querySelector('.component-money')?.textContent?.replace(/\D/g, '') ?? null;
         });
     } catch (error) {
         console.error(error);
