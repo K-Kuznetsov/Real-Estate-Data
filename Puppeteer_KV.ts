@@ -50,9 +50,8 @@ async function KV(TableName: string, PriceLimit: string, DealType: string): Prom
     };
 
     const ResultsPage = 'https://www.kv.ee/search?deal_type=' + DealType + '&company_id_check=237&county=1&parish=1061&price_max=' + PriceLimit + '&area_total_min=25&limit=100&more=' + (ResultsFound - 50);
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
     await page.goto(ResultsPage);
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     let ItemsPerPage: number | null = null;
     try {
@@ -98,7 +97,7 @@ async function KV(TableName: string, PriceLimit: string, DealType: string): Prom
         });
 
         await page.goto(ResultsPage);
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
     };
     await browser.close();
     console.log("KV finished");
@@ -130,6 +129,7 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
 
     if (BaseInfo.Website) {
         await page.goto(BaseInfo.Website);
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await page.waitForSelector('.meta-table .table-lined tr');
     }
 

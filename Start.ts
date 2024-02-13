@@ -13,9 +13,8 @@ async function StartProgram(): Promise<void> {
     await KV('Buy', PriceLimit, '1').catch(error => console.error(error));
 
     SqliteCreate('Rent');
-    //await City24('Rent', '600', 'rent').catch(error => console.error(error));
-    await KV('Rent', '600', '2').catch(error => console.error(error));
-    
+    await City24('Rent', '600', 'rent').catch(error => console.error(error));
+    await KV('Rent', '600', '2').catch(error => console.error(error));    
 };
 
 StartProgram();

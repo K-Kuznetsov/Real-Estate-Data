@@ -61,9 +61,9 @@ async function City24(TableName: string, PriceLimit: string, DealType: string): 
     console.log("City24 started");
 
     for (let PageNumber = 1; PageNumber <= Math.ceil(ResultsFound / ItemsOnStartPage); PageNumber++) {
-        const ResultsPage = 'https://www.city24.ee/real-estate-search/apartments-for-' + DealType + '/tallinn/price=eur-na-' + PriceLimit + '/rooms=1,2,3,4,5+/size=25-na/private-user/id=181-parish/pg=' + PageNumber;
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const ResultsPage = 'https://www.city24.ee/real-estate-search/apartments-for-' + DealType + '/tallinn/price=eur-na-' + PriceLimit + '/rooms=1,2,3,4,5+/size=25-na/private-user/id=181-parish/pg=' + PageNumber;        
         await page.goto(ResultsPage);
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         let ItemsPerPage: number | null = null;
         try {
@@ -106,7 +106,7 @@ async function City24(TableName: string, PriceLimit: string, DealType: string): 
             });
 
             await page.goto(ResultsPage);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
         };
     };
     await browser.close();
@@ -121,12 +121,15 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
         let data: any = {};
         data.Address = document.querySelectorAll(AddressDiv)[i].textContent?.split(',')[0].split('/')[0].replace(/-\d+$/, '').trim() ?? null;
         data.Price = document.querySelectorAll('.object--result .object__info .object__header .object__specs .object-price .object-price__main-price')[i].textContent?.replace(/\D/g, '') ?? null;
-        data.Website = WebsiteElement?.href ?? 'city24.ee';
+        data.Website = WebsiteElement?.href ?? null;
         return data;
     }, i, AddressDiv);
 
-    await page.goto(BaseInfo.Website || 'https://city24.ee');
-    await page.waitForSelector('.full-specs tbody tr');
+    if (BaseInfo.Website !== null) {
+        await page.goto(BaseInfo.Website).catch(error => console.error(error));
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await page.waitForSelector('.full-specs tbody tr');
+    };
 
     const ExtraInfo: ExtraInfoType = await page.evaluate(() => {
         let data: any = {};

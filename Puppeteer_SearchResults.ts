@@ -2,6 +2,7 @@ import * as puppeteer from 'puppeteer';
 
 async function GetResultCount(page: puppeteer.Page, startPage: string, resultsDiv: string): Promise<number> {
     await page.goto(startPage);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     await page.click('#onetrust-accept-btn-handler').catch(() => console.log('No cookies'));
 
     const resultsFound = await page.evaluate((resultsDiv: string) => {

@@ -7,7 +7,7 @@ async function Coop(NetSalary: string): Promise<string> {
     await page.goto('https://www.cooppank.ee/kodulaen');
     await page.waitForSelector('.btn.btn-primary.agree-button.eu-cookie-compliance-default-button');
     await page.click('.btn.btn-primary.agree-button.eu-cookie-compliance-default-button');
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await page.waitForSelector('#edit-monthly-income');
     await page.focus('#edit-monthly-income');    
     await page.type('#edit-monthly-income', NetSalary.toString());
