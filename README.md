@@ -4,5 +4,15 @@
 4) The data is saved via SQLite. It can be imported to BI tools using an ODBC driver.
 
 To use the project, first install NodeJS.
+
+Create a PrivateData.json in the same folder as the other files. The content has to be as follows:
+
+{
+    "GrossSalary": 0000,
+    "APIKey": "xxxxxxxxxxxxxxxxxxxxxxxx",
+    "WorkAddress": "Street Number, City"
+}
+
 Afterwards open a terminal in your IDE and run "npm install axios puppeteer sqlite3 typescript ts-node" to install the necessary packages.
+
 Starting the program is done with the command "ts-node start.ts".
