@@ -3,17 +3,17 @@ import Luminor from './Puppeteer_Luminor';
 import Coop from './Puppeteer_Coop';
 
 async function CompareBanks(NetSalary: string): Promise<string> {
-    const bankPromises = Promise.all([
+    const BankPromises = Promise.all([
         Swedbank(NetSalary),
         Luminor(NetSalary),
         Coop(NetSalary)
     ]);
-    const bankResults = await bankPromises;
-    const bankAmounts = bankResults.map(amount => {
+    const BankResults = await BankPromises;
+    const BankAmounts = BankResults.map(amount => {
         return parseFloat(amount);
     });
 
-    const PriceLimit: string = Math.max(...bankAmounts).toString();
+    const PriceLimit: string = Math.max(...BankAmounts).toString();
     console.log('Highest amount: ' + PriceLimit);
     return PriceLimit;
 };
