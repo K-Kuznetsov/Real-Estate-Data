@@ -14,7 +14,7 @@ async function NominatimAPI(lat: string, lon: string): Promise<string> {
     } catch (error) {
         console.error('Error fetching data from Nominatim API:', error);
         throw error;
-    }
+    };
 };
 
 export default NominatimAPI;
