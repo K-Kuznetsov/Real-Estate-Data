@@ -8,11 +8,11 @@ async function StartProgram(): Promise<void> {
     const NetSalary: string = GrossToNet() || '';
     const PriceLimit: string = await CompareBanks(NetSalary).catch(error => console.error(error)) || '';
 
-    SqliteCreate('Buy');
+    //SqliteCreate('Buy');
     await City24('Buy', PriceLimit, 'sale').catch(error => console.error(error));
     await KV('Buy', PriceLimit, '1').catch(error => console.error(error));
 
-    SqliteCreate('Rent');
+    //SqliteCreate('Rent');
     await City24('Rent', '600', 'rent').catch(error => console.error(error));
     await KV('Rent', '600', '2').catch(error => console.error(error));    
 };

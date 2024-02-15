@@ -30,7 +30,7 @@ async function City24(TableName: string, PriceLimit: string, DealType: string): 
     const MsEdgePath = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
     const browser = await puppeteer.launch({ headless: false, executablePath: MsEdgePath });
     const page = await browser.newPage();
-    const StartPage = 'https://www.city24.ee/real-estate-search/apartments-for-' + DealType + '/tallinn/price=eur-na-' + PriceLimit + '/rooms=1,2,3,4,5+/size=25-na/private-user/id=181-parish';
+    const StartPage = `https://www.city24.ee/real-estate-search/apartments-for-${DealType}/tallinn/price=eur-na-${PriceLimit}/rooms=1,2,3,4,5+/size=25-na/private-user/id=181-parish`;
     const ResultsDiv = '.results__sub-title';
     const AddressDiv = '.object--result .object__info .object__header .object__attributes .object__address';
 
@@ -61,7 +61,7 @@ async function City24(TableName: string, PriceLimit: string, DealType: string): 
     console.log("City24 started");
 
     for (let PageNumber = 1; PageNumber <= Math.ceil(ResultsFound / ItemsOnStartPage); PageNumber++) {
-        const ResultsPage = 'https://www.city24.ee/real-estate-search/apartments-for-' + DealType + '/tallinn/price=eur-na-' + PriceLimit + '/rooms=1,2,3,4,5+/size=25-na/private-user/id=181-parish/pg=' + PageNumber;        
+        const ResultsPage = `https://www.city24.ee/real-estate-search/apartments-for-${DealType}/tallinn/price=eur-na-${PriceLimit}/rooms=1,2,3,4,5+/size=25-na/private-user/id=181-parish/pg=${PageNumber}`;        
         await page.goto(ResultsPage);
         await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -78,7 +78,7 @@ async function City24(TableName: string, PriceLimit: string, DealType: string): 
         };
 
         for (let i = 0; i < ItemsPerPage; i++) {
-            console.log('Page' + PageNumber + ' ' + (i + 1) + '/' + ItemsPerPage + ' out of ' + ResultsFound);
+            console.log(`Page${PageNumber} ${(i + 1)}/${ItemsPerPage} out of ${ResultsFound}`);
 
             const { BaseInfo, ExtraInfo, lat, lon, FromWork, Area } = await GetInfo(i, page, AddressDiv).catch(console.error) as unknown as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; lat: string; lon: string; FromWork: string; Area: string; };
             SqliteInsert({

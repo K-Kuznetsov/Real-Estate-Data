@@ -33,7 +33,7 @@ async function KV(TableName: string, PriceLimit: string, DealType: string): Prom
     const MsEdgePath = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
     const browser = await puppeteer.launch({ headless: false, executablePath: MsEdgePath });
     const page = await browser.newPage();
-    const StartPage =  'https://www.kv.ee/search?deal_type=' + DealType + '&company_id_check=237&county=1&parish=1061&price_max=' + PriceLimit + '&area_total_min=25&limit=100';
+    const StartPage =  `https://www.kv.ee/search?deal_type=${DealType}&company_id_check=237&county=1&parish=1061&price_max=${PriceLimit}&area_total_min=25&limit=100`;
     const ResultsDiv = '.large.stronger';
     const AddressDiv = '.description h2';
 
@@ -49,7 +49,7 @@ async function KV(TableName: string, PriceLimit: string, DealType: string): Prom
         return console.log("KV failed");
     };
 
-    const ResultsPage = 'https://www.kv.ee/search?deal_type=' + DealType + '&company_id_check=237&county=1&parish=1061&price_max=' + PriceLimit + '&area_total_min=25&limit=100&more=' + (ResultsFound - 50);
+    const ResultsPage = `https://www.kv.ee/search?deal_type=${DealType}&company_id_check=237&county=1&parish=1061&price_max=${PriceLimit}&area_total_min=25&limit=100&more=${(ResultsFound - 50)}`;
     await page.goto(ResultsPage);
     await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -69,7 +69,7 @@ async function KV(TableName: string, PriceLimit: string, DealType: string): Prom
     console.log('KV started');
 
     for (let i = 0; i < ItemsPerPage; i++) {
-        console.log('Page' + PageNumber + ' ' + (i + 1) + '/' + ItemsPerPage + ' out of ' + ResultsFound);
+        console.log(`Page${PageNumber} ${(i + 1)}/${ItemsPerPage} out of ${ResultsFound}`);
 
         const { BaseInfo, ExtraInfo, ExtraInfo2, lat, lon, FromWork, Area } = await GetInfo(i, page, AddressDiv).catch(console.error) as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; ExtraInfo2: ExtraInfoType2; lat: string; lon: string; FromWork: string; Area: string; };
         SqliteInsert({
