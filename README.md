@@ -5,7 +5,7 @@
 
 To use the project, first install NodeJS.
 
-Create PrivateData.json in the same folder as the other files. The content has to be as follows:
+Create PrivateData.json in the same folder as the other files. The content has to be as follows (the API key needs to be requested from Google to calculate the route distance from work):
 
 {
 
