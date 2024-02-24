@@ -24,7 +24,9 @@ async function SqliteCreate(Table: string): Promise<void> {
         Kitchen text, 
         Bathroom text,         
         Technical text,
-        Other text
+        Other text,
+        EHRCode string,
+        Purpose string
         )`
     );
 };

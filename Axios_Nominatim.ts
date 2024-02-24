@@ -6,15 +6,10 @@ interface NominatimResponse {
     };
 };
 
-async function NominatimAPI(lat: string, lon: string): Promise<string> {
-    try {
-        const Response = await axios.get<NominatimResponse>(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-        const Area = Response.data.address.suburb;
-        return Area;
-    } catch (error) {
-        console.error('Error fetching data from Nominatim API:', error);
-        throw error;
-    };
+async function NominatimAPI(Latitude: string, Longitude: string): Promise<string> {
+    const Response = await axios.get<NominatimResponse>(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${Latitude}&lon=${Longitude}`);
+    const Area = Response.data.address.suburb;
+    return Area;
 };
 
 export default NominatimAPI;

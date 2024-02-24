@@ -1,11 +1,12 @@
 import * as puppeteer from 'puppeteer';
 import GoogleDirectionsAPI from './Axios_GoogleDirections';
 import NominatimAPI from './Axios_Nominatim';
+import { EHRBuildingSearch, EHRBuildingData } from './Axios_EHR';
 import SqliteInsert from './Sqlite_Insert';
 import { GetResultCount, GetItemsPerPage } from './Puppeteer_SearchResults';
 
 interface BaseInfoType {
-    Address: string | null ;
+    Address: string | null;
     Price: string | null;
     Website: string | null;
 };
@@ -13,11 +14,8 @@ interface BaseInfoType {
 interface ExtraInfoType {
     Rooms: string | null;
     Size: string | null;
-    Year: string | null;
     Condition: string | null;
-    EnergyClass: string | null;
     Technical: string | null;
-    Floors: string | null;
     Floor: string | null;
     HVAC: string | null;
     Kitchen: string | null;
@@ -61,9 +59,9 @@ async function City24(TableName: string, PriceLimit: string, DealType: string): 
     console.log("City24 started");
 
     for (let PageNumber = 1; PageNumber <= Math.ceil(ResultsFound / ItemsOnStartPage); PageNumber++) {
-        const ResultsPage = `https://www.city24.ee/real-estate-search/apartments-for-${DealType}/tallinn/price=eur-na-${PriceLimit}/rooms=1,2,3,4,5+/size=25-na/private-user/id=181-parish/pg=${PageNumber}`;        
+        const ResultsPage = `https://www.city24.ee/real-estate-search/apartments-for-${DealType}/tallinn/price=eur-na-${PriceLimit}/rooms=1,2,3,4,5+/size=25-na/private-user/id=181-parish/pg=${PageNumber}`;
         await page.goto(ResultsPage);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         let ItemsPerPage: number | null = null;
         try {
@@ -80,40 +78,42 @@ async function City24(TableName: string, PriceLimit: string, DealType: string): 
         for (let i = 0; i < ItemsPerPage; i++) {
             console.log(`Page${PageNumber} ${(i + 1)}/${ItemsPerPage} out of ${ResultsFound}`);
 
-            const { BaseInfo, ExtraInfo, lat, lon, FromWork, Area } = await GetInfo(i, page, AddressDiv).catch(console.error) as unknown as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; lat: string; lon: string; FromWork: string; Area: string; };
+            const { BaseInfo, ExtraInfo, Latitude, Longitude, FromWork, Area, Year, Purpose, Floors, EnergyClass, EHRCode } = await GetInfo(i, page, AddressDiv).catch(console.error) as unknown as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; Latitude: string; Longitude: string; FromWork: string; Area: string; Year: string; Purpose: string; Floors: string; EnergyClass: string; EHRCode: string};
             SqliteInsert({
                 Table: TableName,
-                Area,
-                Address: BaseInfo.Address,
-                Rooms: ExtraInfo.Rooms,
-                Size: ExtraInfo.Size,
-                Price: BaseInfo.Price,
+                Area : Area ?? null,
+                Address: BaseInfo.Address ?? null,
+                Rooms: ExtraInfo.Rooms ?? null,
+                Size: ExtraInfo.Size ?? null,
+                Price: BaseInfo.Price ?? null,
                 FromWork: FromWork ?? null,
-                Website: BaseInfo.Website,
-                Latitude: lat,
-                Longitude: lon,
-                Year: ExtraInfo.Year,
-                Condition: ExtraInfo.Condition,
-                EnergyClass: ExtraInfo.EnergyClass,
-                Technical: ExtraInfo.Technical,
-                Floors: ExtraInfo.Floors,
-                Floor: ExtraInfo.Floor,
-                HVAC: ExtraInfo.HVAC,
-                Kitchen: ExtraInfo.Kitchen,
-                Bathroom: ExtraInfo.Bathroom,
-                BuildingType: ExtraInfo.BuildingType,
-                Other: ExtraInfo.Other
+                Website: BaseInfo.Website ?? 'City24.ee',
+                Latitude: Latitude ?? null,
+                Longitude: Longitude ?? null,
+                Year: Year ?? null,
+                Condition: ExtraInfo.Condition ?? null,
+                EnergyClass: EnergyClass ?? null,
+                Technical: ExtraInfo.Technical ?? null,
+                Floors: Floors ?? null,
+                Floor: ExtraInfo.Floor ?? null,
+                HVAC: ExtraInfo.HVAC ?? null,
+                Kitchen: ExtraInfo.Kitchen ?? null,
+                Bathroom: ExtraInfo.Bathroom ?? null,
+                BuildingType: ExtraInfo.BuildingType ?? null,
+                Other: ExtraInfo.Other ?? null,
+                EHRCode: EHRCode ?? null,
+                Purpose: Purpose ?? null
             });
 
             await page.goto(ResultsPage);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 2000));
         };
     };
     await browser.close();
     console.log("City24 finished");
 };
 
-async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Promise<{ BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; lat: string; lon: string; FromWork: string; Area: string }> {
+async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Promise<{ BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; Latitude: string; Longitude: string; FromWork: string; Area: string }> {
 
     const BaseInfo: BaseInfoType = await page.evaluate((i, AddressDiv) => {
         const WebsiteElement = document.querySelectorAll('.object--result .object__info .object__header .object__attributes')[i] as HTMLAnchorElement;
@@ -127,7 +127,7 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
 
     if (BaseInfo.Website !== null) {
         await page.goto(BaseInfo.Website).catch(error => console.error(error));
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
         await page.waitForSelector('.full-specs tbody tr');
     };
 
@@ -149,18 +149,12 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
 
                 if (key?.match('Seisukord')) {
                     data.Condition = value ? value : null;
-                } else if (key?.match('Energiamärgis')) {
-                    data.EnergyClass = value ? value : null;
-                } else if (key?.match('Korruseid kokku')) {
-                    data.Floors = value ? parseInt(value.trim()) : null;
                 } else if (key?.match('Korrus')) {
                     data.Floor = value ? parseInt(value.trim()) : null;
                 } else if (key?.match('Küte') || key?.match('Ventilatsioon')) {
                     data.HVAC = value ? value : null;
                 } else if (key?.match('Pliit')) {
                     data.Kitchen = value ? value : null;
-                } else if (key?.match('Ehitusaasta')) {
-                    data.Year = value ? parseInt(value.trim()) : null;
                 } else if (key?.match('Sanitaar')) {
                     data.Bathroom = value ? value : null;
                 } else if (key?.match('Materjal')) {
@@ -179,42 +173,51 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
         return data;
     });
 
-    const GoogleMapsAddress = BaseInfo.Address ? BaseInfo.Address.replace('(otse omanikult)', '').replace(/[ÕÖÜÄ]/g, match => {
-        const map: { [key: string]: string } = { 'Õ': 'O', 'Ö': 'O', 'Ü': 'U', 'Ä': 'A' };
-        return map[match];
-    }).replace(/[õöüä]/g, match => {
-        const map: { [key: string]: string } = { 'õ': 'o', 'ö': 'o', 'ü': 'u', 'ä': 'a' };
-        return map[match];
-    }).trim() + ', Tallinn' : null;
+    const GoogleMapsAddress = BaseInfo.Address ? BaseInfo.Address.replace('(otse omanikult)', '').replace('(broneeritud)', '').trim() + ', Tallinn' : null;
 
-    let lat: string | null = null;
-    try {
-        lat = await GoogleDirectionsAPI(GoogleMapsAddress ?? '').then(response => response.lat);
-    } catch (error) {
-        console.error(error);
-    };
-
-    let lon: string | null = null;
-    try {
-        lon = await GoogleDirectionsAPI(GoogleMapsAddress ?? '').then(response => response.lon);
-    } catch (error) {
-        console.error(error);
-    };
-
+    let Latitude: string | null = null;
+    let Longitude: string | null = null;
     let FromWork: string | null = null;
     try {
-        FromWork = await GoogleDirectionsAPI(GoogleMapsAddress ?? '').then(response => response.FromWork);
+        const Response = await GoogleDirectionsAPI(GoogleMapsAddress ?? '').then(Response => Response);
+        Latitude = Response.Latitude ?? null;
+        Longitude = Response.Longitude ?? null;
+        FromWork = Response.FromWork ?? null;
     } catch (error) {
         console.error(error);
-    };
+    };    
 
     let Area: string | null = null;
     try {
-        Area = await NominatimAPI(lat ?? '', lon ?? '').then(response => response);
+        Area = await NominatimAPI(Latitude ?? '', Longitude ?? '').then(Response => Response);
     } catch (error) {
         console.error(error);
     };
-    return { BaseInfo, ExtraInfo, lat, lon, FromWork, Area} as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; lat: string; lon: string; FromWork: string; Area: string };
+
+    let EHRCode: string | null = null;
+    let Year: string | null = null;
+    let Purpose: string | null = null;
+    let Floors: string | null = null;
+    try {
+        const Response = await EHRBuildingSearch(GoogleMapsAddress ?? '').then(Response => Response);
+        EHRCode = Response.EHRCode ?? null;
+        Year = Response.Year ?? null;
+        Purpose = Response.Purpose ?? null;
+        Floors = Response.Floors ?? null;
+    } catch (error) {
+        console.error(error);
+    };
+    
+    let EnergyClass: string | null = null;
+    try {
+        EnergyClass = await EHRBuildingData(EHRCode ?? '').then(Response => Response);
+    } catch (error) {
+        console.error(error);
+    };
+
+    console.log(GoogleMapsAddress);
+
+    return { BaseInfo, ExtraInfo, Latitude, Longitude, FromWork, Area, Year, Purpose, Floors, EnergyClass, EHRCode } as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; Latitude: string; Longitude: string; FromWork: string; Area: string; Year: string; Purpose: string; Floors: string; EnergyClass: string; EHRCode: string };
 };
 
 export default City24;
