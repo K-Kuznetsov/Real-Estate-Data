@@ -1,40 +1,9 @@
 import * as puppeteer from 'puppeteer';
-import SqliteInsert from './Sqlite_Insert';
+import { SqliteInsert, BaseInfoType, ExternalDataType, ExtraInfoType } from './Sqlite_Insert';
 import GoogleDirectionsAPI from './Axios_GoogleDirections';
 import NominatimAPI from './Axios_Nominatim';
 import { EHRBuildingSearch, EHRBuildingData } from './Axios_EHR';
 import { GetResultCount, GetItemsPerPage } from './Puppeteer_SearchResults';
-
-interface BaseInfoType {
-    Address: string | null;
-    Price: string | null;
-    Website: string | null;
-};
-
-interface ExternalDataType {
-    Latitude: string | null;
-    Longitude: string | null;
-    FromWork: string | null;
-    Area: string | null;
-    EHRCode: string | null;
-    Year: string | null;
-    Purpose: string | null;
-    Floors: string | null;
-    EnergyClass: string | null;
-};
-
-interface ExtraInfoType {
-    Floor: string | null;
-    Condition: string | null;
-    Size: string | null;
-    Rooms: string | null;
-    Kitchen: string | null;
-    Bathroom: string | null;
-    HVAC: string | null;
-    Technical: string | null;
-    Other: string | null;
-    BuildingType: string | null;
-};
 
 async function City24(TableName: string, PriceLimit: string, DealType: string): Promise<any> {
     const MsEdgePath = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
