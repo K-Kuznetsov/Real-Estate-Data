@@ -1,5 +1,5 @@
-import GrossToNet from './GetNetSalary';
-import CompareBanks from './CompareBanks';
+import GrossToNet from './Node_GetNetSalary';
+import CompareBanks from './Node_CompareBanks';
 import SqliteCreate from './Sqlite_Create';
 import KV from './Puppeteer_KV';
 import City24 from './Puppeteer_City24';

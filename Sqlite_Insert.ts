@@ -1,5 +1,5 @@
 import sqlite3 from 'sqlite3';
-import { SqliteInsertParameters } from './Interfaces';
+import { SqliteInsertParameters } from './Node_Interfaces';
 
 const db = new sqlite3.Database('./Kinnisvara.db');
 
