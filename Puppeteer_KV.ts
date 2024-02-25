@@ -1,8 +1,8 @@
 import * as puppeteer from 'puppeteer';
+import SqliteInsert from './Sqlite_Insert';
 import GoogleDirectionsAPI from './Axios_GoogleDirections';
 import NominatimAPI from './Axios_Nominatim';
 import { EHRBuildingSearch, EHRBuildingData } from './Axios_EHR';
-import SqliteInsert from './Sqlite_Insert';
 import { GetResultCount, GetItemsPerPage } from './Puppeteer_SearchResults';
 
 interface BaseInfoType {
@@ -11,14 +11,23 @@ interface BaseInfoType {
     Website: string | null;
 };
 
+interface ExternalDataType {
+    Latitude: string | null;
+    Longitude: string | null;
+    FromWork: string | null;
+    Area: string | null;
+    EHRCode: string | null;
+    Year: string | null;
+    Purpose: string | null;
+    Floors: string | null;
+    EnergyClass: string | null;
+};
+
 interface ExtraInfoType {
     Floor: string | null;
     Condition: string | null;
     Size: string | null;
     Rooms: string | null;
-};
-
-interface ExtraInfoType2 {
     Kitchen: string | null;
     Bathroom: string | null;
     HVAC: string | null;
@@ -27,7 +36,7 @@ interface ExtraInfoType2 {
     BuildingType: string | null;
 };
 
-async function KV(TableName: string, PriceLimit: string, DealType: string): Promise<void> {
+async function KV(TableName: string, PriceLimit: string, DealType: string): Promise<any> {
     const MsEdgePath = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
     const browser = await puppeteer.launch({ headless: false, executablePath: MsEdgePath });
     const page = await browser.newPage();
@@ -69,32 +78,35 @@ async function KV(TableName: string, PriceLimit: string, DealType: string): Prom
     for (let i = 0; i < ItemsPerPage; i++) {
         console.log(`Page${PageNumber} ${(i + 1)}/${ItemsPerPage} out of ${ResultsFound}`);
 
-        const { BaseInfo, ExtraInfo, ExtraInfo2, Latitude, Longitude, FromWork, Area, Year, Purpose, Floors, EnergyClass, EHRCode } = await GetInfo(i, page, AddressDiv).catch(console.error) as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; ExtraInfo2: ExtraInfoType2; Latitude: string; Longitude: string; FromWork: string; Area: string; Year: string; Purpose: string; Floors: string; EnergyClass: string; EHRCode: string};
-        SqliteInsert({
-            Table: TableName,
-            Area : Area ?? null,
-            Address: BaseInfo.Address ?? null,
-            Rooms: ExtraInfo.Rooms ?? null,
-            Size: ExtraInfo.Size ?? null,
-            Price: BaseInfo.Price ?? null,
-            FromWork: FromWork ?? null,
-            Website: BaseInfo.Website ?? 'KV.ee',
-            Latitude: Latitude ?? null,
-            Longitude: Longitude ?? null,
-            Year: Year ?? null,
-            Condition: ExtraInfo.Condition ?? null,
-            EnergyClass: EnergyClass ?? null,
-            Technical: ExtraInfo2.Technical ?? null,
-            Floors: Floors ?? null,
-            Floor: ExtraInfo.Floor ?? null,
-            HVAC: ExtraInfo2.HVAC ?? null,
-            Kitchen: ExtraInfo2.Kitchen ?? null,
-            Bathroom: ExtraInfo2.Bathroom ?? null,
-            BuildingType: ExtraInfo2.BuildingType ?? null,
-            Other: ExtraInfo2.Other ?? null,
-            EHRCode: EHRCode ?? null,
-            Purpose: Purpose ?? null
-        });
+        const { BaseInfo, ExtraInfo, ExternalData } = await GetInfo(i, page, AddressDiv).catch(console.error) as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; ExternalData: ExternalDataType };
+
+        if (BaseInfo.Address !== null && /\d/.test(BaseInfo.Address)) {
+            SqliteInsert({
+                Table: TableName,
+                Area: ExternalData.Area ?? null,
+                Address: BaseInfo.Address ?? null,
+                Rooms: ExtraInfo.Rooms ?? null,
+                Size: ExtraInfo.Size ?? null,
+                Price: BaseInfo.Price ?? null,
+                FromWork: ExternalData.FromWork ?? null,
+                Website: BaseInfo.Website ?? 'KV.ee',
+                Latitude: ExternalData.Latitude ?? null,
+                Longitude: ExternalData.Longitude ?? null,
+                Year: ExternalData.Year ?? null,
+                Condition: ExtraInfo.Condition ?? null,
+                EnergyClass: ExternalData.EnergyClass ?? null,
+                Technical: ExtraInfo.Technical ?? null,
+                Floors: ExternalData.Floors ?? null,
+                Floor: ExtraInfo.Floor ?? null,
+                HVAC: ExtraInfo.HVAC ?? null,
+                Kitchen: ExtraInfo.Kitchen ?? null,
+                Bathroom: ExtraInfo.Bathroom ?? null,
+                BuildingType: ExtraInfo.BuildingType ?? null,
+                Other: ExtraInfo.Other ?? null,
+                EHRCode: ExternalData.EHRCode ?? null,
+                Purpose: ExternalData.Purpose ?? null
+            });
+        };
 
         await page.goto(ResultsPage);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -103,11 +115,11 @@ async function KV(TableName: string, PriceLimit: string, DealType: string): Prom
     console.log("KV finished");
 };
 
-async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Promise<{ BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; ExtraInfo2: ExtraInfoType2; Latitude: string; Longitude: string; FromWork: string; Area: string }> {
+async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Promise<{ BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; ExternalData: ExternalDataType }> {
 
     const BaseInfo: BaseInfoType = await page.evaluate((i, AddressDiv) => {
         const data: any = {};
-        data.Address = document.querySelectorAll(AddressDiv)[i].textContent?.split(",")[2]?.split('/')[0]?.replace(/-\d+$/, '')?.trim() || null;
+        data.Address = document.querySelectorAll(AddressDiv)[i].textContent?.split(",")[2]?.replace(/-\d+/g, '').replace('(otse omanikult)', '').replace('(Broneeritud)', '').replace(/^\./, "").trim() + ', Tallinn' || null;
 
         let priceElement = document.querySelectorAll('.price')[0];
         data.Price = priceElement?.textContent?.split('  ')[0].replace(/\D/g, '') || null;
@@ -126,12 +138,39 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
         return data;
     }, i, AddressDiv);
 
+    const ExternalData: ExternalDataType = {
+        Latitude: null,
+        Longitude: null,
+        FromWork: null,
+        Area: null,
+        EHRCode: null,
+        Year: null,
+        Purpose: null,
+        Floors: null,
+        EnergyClass: null
+    };
+
+    try {
+        const GoogleResponse = await GoogleDirectionsAPI(BaseInfo.Address ?? '');
+        ExternalData.Latitude = GoogleResponse.Latitude ?? null;
+        ExternalData.Longitude = GoogleResponse.Longitude ?? null;
+        ExternalData.FromWork = GoogleResponse.FromWork ?? null;
+        ExternalData.Area = ExternalData.Latitude && ExternalData.Longitude ? await NominatimAPI(ExternalData.Latitude, ExternalData.Longitude) : null;
+        const EHRResponse = await EHRBuildingSearch(BaseInfo.Address ?? '');
+        ExternalData.EHRCode = EHRResponse.EHRCode ?? null;
+        ExternalData.Year = EHRResponse.Year ?? null;
+        ExternalData.Purpose = EHRResponse.Purpose ?? null;
+        ExternalData.Floors = EHRResponse.Floors ?? null;
+        ExternalData.EnergyClass = await EHRBuildingData(ExternalData.EHRCode ?? '');
+    } catch (error) {
+        console.error(error);
+    };
 
     if (BaseInfo.Website) {
         await page.goto(BaseInfo.Website);
         await new Promise(resolve => setTimeout(resolve, 2000));
         await page.waitForSelector('.meta-table .table-lined tr');
-    }
+    };
 
     const ExtraInfo = await page.evaluate(() => {
         let data: any = {};
@@ -140,22 +179,20 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
             const th = row.querySelector('th');
             const td = row.querySelector('td');
 
-            if (th && th.textContent && th.textContent.match('Korrus/Korruseid')) {
-                data.Floor = parseInt(td?.textContent?.split('/')[0].trim() || '') || null;
-            } else if (th && th.textContent && th.textContent.match('Seisukord')) {
-                data.Condition = td?.textContent?.trim() || null;
-            } else if (th && th.textContent && th.textContent.match('Üldpind')) {
-                data.Size = parseInt(td?.textContent?.split(' ')[0].trim() || '') || null;
-            } else if (th && th.textContent && th.textContent.match('Tube')) {
-                data.Rooms = parseInt(td?.textContent?.trim() || '') || null;
+            if (th && th.textContent) {
+                if (th.textContent.match('Korrus/Korruseid')) {
+                    data.Floor = parseInt(td?.textContent?.split('/')[0].trim() || '') || null;
+                } else if (th.textContent.match('Seisukord')) {
+                    data.Condition = td?.textContent?.trim() || null;
+                } else if (th.textContent.match('Üldpind')) {
+                    data.Size = parseInt(td?.textContent?.split(' ')[0].trim() || '') || null;
+                } else if (th.textContent.match('Tube')) {
+                    data.Rooms = parseInt(td?.textContent?.trim() || '') || null;
+                };
             };
         };
-        return data;
-    });
 
-    const ExtraInfo2 = await page.evaluate(() => {
-        let data: any = {};
-        const BaseText = (document.querySelector('#object-extra-info .description p') as HTMLParagraphElement)?.innerText! || '';
+        const BaseText = (document.querySelector('#object-extra-info .description p') as HTMLParagraphElement)?.innerText || '';
         const lines = BaseText.split('\n');
 
         lines.forEach((line) => {
@@ -173,54 +210,11 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
                 data.BuildingType = line.trim();
             };
         });
+
         return data;
     });
 
-    const GoogleMapsAddress = BaseInfo.Address ? BaseInfo.Address.replace('(otse omanikult)', '').replace('(broneeritud)', '').trim() + ', Tallinn' : null;
-
-    let Latitude: string | null = null;
-    let Longitude: string | null = null;
-    let FromWork: string | null = null;
-    try {
-        const Response = await GoogleDirectionsAPI(GoogleMapsAddress ?? '');
-        Latitude = Response.Latitude ?? '';
-        Longitude = Response.Longitude ?? '';
-        FromWork = Response.FromWork ?? '';
-    } catch (error) {
-        console.error(error);
-    };
-
-    let Area: string | null = null;
-    try {
-        Area = await NominatimAPI(Latitude ?? '', Longitude ?? '').then(Response => Response);
-    } catch (error) {
-        console.error(error);
-    };
-
-    let EHRCode: string | null = null;
-    let Year: string | null = null;
-    let Purpose: string | null = null;
-    let Floors: string | null = null;
-    try {
-        const Response = await EHRBuildingSearch(GoogleMapsAddress ?? '').then(Response => Response);
-        EHRCode = Response.EHRCode ?? null;
-        Year = Response.Year ?? null;
-        Purpose = Response.Purpose ?? null;
-        Floors = Response.Floors ?? null;
-    } catch (error) {
-        console.error(error);
-    };
-    
-    let EnergyClass: string | null = null;
-    try {
-        EnergyClass = await EHRBuildingData(EHRCode ?? '').then(Response => Response);
-    } catch (error) {
-        console.error(error);
-    };
-
-    console.log(GoogleMapsAddress);
-
-    return { BaseInfo, ExtraInfo, ExtraInfo2, Latitude, Longitude, FromWork, Area, Year, Purpose, Floors, EnergyClass, EHRCode } as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; ExtraInfo2: ExtraInfoType2; Latitude: string; Longitude: string; FromWork: string; Area: string; Year: string; Purpose: string; Floors: string; EnergyClass: string; EHRCode: string};
+    return { BaseInfo, ExtraInfo, ExternalData } as { BaseInfo: BaseInfoType; ExtraInfo: ExtraInfoType; ExternalData: ExternalDataType };
 };
 
 export default KV;

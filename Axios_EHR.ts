@@ -5,14 +5,14 @@ async function EHRBuildingSearch(Address: string): Promise<any> {
         buildingLocation: Address,
         buildingName: "",
         buildingStates: [""],
-        firstUseDate: { from: "", to: "" },
+        firstUseDate: { from: "0", to: "" },
         firstUseMissing: false,
         buildingType: ["H"],
         purposeOfUse: [""],
         ownershipType: [""]
     };
 
-    const Response = await axios.post('https://devkluster.ehr.ee/api/building/v2/buildingSearch', RequestBody, { headers: { 'accept': 'application/json', 'Content-Type': 'application/json' } });
+    const Response: any = await axios.post('https://devkluster.ehr.ee/api/building/v2/buildingSearch', RequestBody, { headers: { 'accept': 'application/json', 'Content-Type': 'application/json' } });
     const EHRCode: string = Response.data[0].ehrCode ? Response.data[0].ehrCode : null;
     const Year: string = Response.data[0].firstUseDate ? Response.data[0].firstUseDate: null;
     const Purpose: string = Response.data[0].purposeOfUse.value ? Response.data[0].purposeOfUse.value : null;
