@@ -1,9 +1,10 @@
 import * as puppeteer from 'puppeteer';
-import { SqliteInsert, BaseInfoType, ExternalDataType, ExtraInfoType } from './Sqlite_Insert';
+import SqliteInsert from './Sqlite_Insert';
 import GoogleDirectionsAPI from './Axios_GoogleDirections';
 import NominatimAPI from './Axios_Nominatim';
 import { EHRBuildingSearch, EHRBuildingData } from './Axios_EHR';
 import { GetResultCount, GetItemsPerPage } from './Puppeteer_SearchResults';
+import { BaseInfoType, ExternalDataType, ExtraInfoType } from './Interfaces';
 
 async function City24(TableName: string, PriceLimit: string, DealType: string): Promise<any> {
     const MsEdgePath = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
