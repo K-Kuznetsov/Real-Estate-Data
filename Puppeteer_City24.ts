@@ -1,10 +1,8 @@
 import * as puppeteer from 'puppeteer';
 import SqliteInsert from './Sqlite_Insert';
-import GoogleDirectionsAPI from './Axios_GoogleDirections';
-import NominatimAPI from './Axios_Nominatim';
 import GetPageDetails from './Puppeteer_PageDetails';
-import { EHRBuildingSearch, EHRBuildingData } from './Axios_EHR';
-import e from 'express';
+import { GoogleDirectionsAPI, OpenStreetMapAPI } from './Axios_GeoInfo';
+import { EHRBuildingSearch, EHRBuildingData } from './Axios_BuildingData';
 
 async function City24(TableName: string, PriceLimit: string, DealType: string): Promise<any> {
     const MsEdgePath = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
@@ -88,7 +86,7 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
         ExternalData.Latitude = GoogleResponse.Latitude ?? null;
         ExternalData.Longitude = GoogleResponse.Longitude ?? null;
         ExternalData.FromWork = GoogleResponse.FromWork ?? null;
-        ExternalData.Area = await NominatimAPI(ExternalData.Latitude ?? '', ExternalData.Longitude ?? '') ?? null;
+        ExternalData.Area = await OpenStreetMapAPI(ExternalData.Latitude ?? '', ExternalData.Longitude ?? '') ?? null;
         const EHRResponse = await EHRBuildingSearch(BaseInfo.Address ?? '') ?? {};
         ExternalData.EHRCode = EHRResponse.EHRCode ?? null;
         ExternalData.Year = EHRResponse.Year ?? null;
