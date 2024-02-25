@@ -4,7 +4,7 @@ import SqliteCreate from './Sqlite_Create';
 import KV from './Puppeteer_KV';
 import City24 from './Puppeteer_City24';
 
-async function StartProgram(): Promise<void> {
+async function StartProgram(): Promise<any> {
     const NetSalary: string = GrossToNet() || '';
     const PriceLimit: string = await CompareBanks(NetSalary).catch(error => console.error(error)) || '';
 
