@@ -1,13 +1,32 @@
 import sqlite3 from 'sqlite3';
-import { SqliteInsertParameters } from './Node_Interfaces';
 
 const db = new sqlite3.Database('./Kinnisvara.db');
 
-function SqliteInsert({
-    Table, Area, Address, Rooms, Size, Price, FromWork, Website, Latitude,
-    Longitude, Year, Condition, EnergyClass, Technical, Floors, Floor,
-    HVAC, Kitchen, Bathroom, BuildingType, Other, EHRCode, Purpose
-}: SqliteInsertParameters): any {
+function SqliteInsert(
+    Table: string,
+    Area: string,
+    Address: string,
+    Rooms: string,
+    Size: string,
+    Price: string,
+    FromWork: string,
+    Website: string,
+    Latitude: string,
+    Longitude: string, 
+    Year: string, 
+    Condition: string, 
+    EnergyClass: string, 
+    Technical: string, 
+    Floors: string, 
+    Floor: string,
+    HVAC: string, 
+    Kitchen: string, 
+    Bathroom: string, 
+    BuildingType: string, 
+    Other: string, 
+    EHRCode: string, 
+    Purpose: string
+) {
     db.run(`INSERT INTO ${Table} (
         Area,
         Address,
