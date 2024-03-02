@@ -5,8 +5,8 @@ async function Luminor(NetSalary: string): Promise<string> {
     const browser = await puppeteer.launch({ headless: true, executablePath: MsEdgePath });
     const page = await browser.newPage();
     await page.goto('https://luminor.ee/era/kodulaen?t=maksimaalne-laenusumma');
-    await page.waitForSelector('#onetrust-accept-btn-handler');
-    await page.click('#onetrust-accept-btn-handler');
+    //await page.waitForSelector('#onetrust-accept-btn-handler');
+    //await page.click('#onetrust-accept-btn-handler');
     await page.waitForSelector('#mortgage_loan_monthly_income_after_tax');
     await page.focus('#mortgage_loan_monthly_income_after_tax');
     await page.keyboard.press('Backspace');

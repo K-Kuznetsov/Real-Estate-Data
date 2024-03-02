@@ -71,7 +71,7 @@ async function GetInfo(i: number, page: puppeteer.Page, AddressDiv: string): Pro
 
     const BaseInfo: any = await page.evaluate((i, AddressDiv) => {
         let data: any = {};
-        data.Address = document.querySelectorAll(AddressDiv)[i].textContent?.split(',')[0].replace(/-\d+/g, '').replace('(otse omanikult)', '').replace('OTSE OMANIKULT', '').replace('(Broneeritud)', '').trim().replace(/^\./, "") + ', Tallinn' ?? null;
+        data.Address = document.querySelectorAll(AddressDiv)[i].textContent?.split(',')[0].replace(/-\d+/g, '').replace('(otse omanikult)', '').replace('OTSE OMANIKULT', '').replace('(Broneeritud)', '').replace(/tn |mnt |pst |maantee /g, '').trim().replace(/^\./, "") + ', Tallinn' ?? null;
         data.Price = document.querySelectorAll('.object--result .object__info .object__header .object__specs .object-price .object-price__main-price')[i].textContent?.replace(/\D/g, '') ?? null;
 
         const WebsiteElement = document.querySelectorAll('.object--result .object__info .object__header .object__attributes')[i] as HTMLAnchorElement;
