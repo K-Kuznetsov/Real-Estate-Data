@@ -1,5 +1,8 @@
 import axios from 'axios';
-import { APIKey, WorkAddress } from './PrivateData.json';
+import 'dotenv/config';
+
+const APIKey: string = process.env.APIKEY || '';
+const WorkAddress: string = process.env.WorkAddress || ''
 
 async function GoogleDirectionsAPI(Address: string): Promise<any> {
     const TravelMode: string = 'walking'; // Other options are driving, bicycling, transit.

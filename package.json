@@ -5,6 +5,7 @@
     "@types/sqlite3": "^3.1.11",
     "@types/typescript": "^2.0.0",
     "axios": "^1.6.7",
+    "dotenv": "^16.4.5",
     "puppeteer": "^22.0.0",
     "sqlite3": "^5.1.7",
     "ts-node": "^10.9.2",

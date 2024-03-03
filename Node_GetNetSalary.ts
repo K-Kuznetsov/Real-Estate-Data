@@ -1,4 +1,6 @@
-import { GrossSalary } from './PrivateData.json';
+import 'dotenv/config';
+
+const GrossSalary: number = parseFloat(process.env.GrossSalary || '0');
 
 function GrossToNet(): string {
     const Unemployment: number = GrossSalary * 0.016;
