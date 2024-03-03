@@ -5,17 +5,11 @@
 
 To use the project, first install NodeJS.
 
-Create PrivateData.json in the same folder as the other files. The content has to be as follows (the API key needs to be requested from Google to calculate the route distance from work):
+Create .env in the same folder as the other files. The content has to be as follows (the API key needs to be requested from Google to calculate the route distance from work):
 
-{
-
-    "GrossSalary": 0000,
-    
-    "APIKey": "xxxxxxxxxxxxxxxxxxxxxxxx",
-    
-    "WorkAddress": "Street Number, City"
-    
-}
+GrossSalary=0000
+APIKey='xxxxxxxxxxxxxxxxxxxxxxxx'
+WorkAddress='Street Number, City'    
 
 Afterwards open a terminal in your IDE and run "npm install axios puppeteer sqlite3 typescript ts-node" to install the necessary packages.
 
